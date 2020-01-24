@@ -5844,7 +5844,7 @@ help from Bernd Raichle, for which I am grateful.
     \renewcommand\foreignlanguage[2]{#2}%
     \global\let\babel@aux\@gobbletwo  % Also as flag
   \fi
-  \ifcase\bbl@engine\or\pagedir\bodydir\fi}  % TODO - a better place
+  \ifcase\bbl@engine\or\pagedirection\bodydirection\fi}  % TODO - a better place
 %    \end{macrocode}
 %
 %  \end{macro}
@@ -9914,43 +9914,28 @@ help from Bernd Raichle, for which I am grateful.
 \ifodd\bbl@engine  % luatex=1
   \AddBabelHook{babel-bidi}{afterextras}{\bbl@switchdir}
   \DisableBabelHook{babel-bidi}
-  \chardef\bbl@thetextdir\z@
-  \chardef\bbl@thepardir\z@
+  \let\bbl@thetextdir\textdirection
+  \let\bbl@thepardir\pardirection
   \def\bbl@getluadir#1{%
-    \directlua{
-      if tex.#1dir == 'TLT' then
-        tex.sprint('0')
-      elseif tex.#1dir == 'TRT' then
-        tex.sprint('1')
-      end}}
-  \def\bbl@setluadir#1#2#3{% 1=text/par.. 2=\textdir.. 3=0 lr/1 rl
-    \ifcase#3\relax
-      \ifcase\bbl@getluadir{#1}\relax\else
-        #2 TLT\relax
-      \fi
-    \else
-      \ifcase\bbl@getluadir{#1}\relax
-        #2 TRT\relax
-      \fi
-    \fi}
+    \the \csname #1direction\endcsname%
+  }
+  \def\bbl@@setluadir#1#2{
+    \ifnum #2=#1\else
+      #1=#2\relax
+    \fi
+  }
   \def\bbl@textdir#1{%
-    \bbl@setluadir{text}\textdir{#1}%
-    \chardef\bbl@thetextdir#1\relax
+    \bbl@@setluadir\textdirection{#1}%
     \setattribute\bbl@attr@dir{\numexpr\bbl@thepardir*3+#1}}
-  \def\bbl@pardir#1{%
-    \bbl@setluadir{par}\pardir{#1}%
-    \chardef\bbl@thepardir#1\relax}
-  \def\bbl@bodydir{\bbl@setluadir{body}\bodydir}
-  \def\bbl@pagedir{\bbl@setluadir{page}\pagedir}
-  \def\bbl@dirparastext{\pardir\the\textdir\relax}%   %%%%
+  \def\bbl@pardir#1{\pardirection#1\relax}
+  \def\bbl@bodydir#1{\bodydirection#1\relax}
+  \def\bbl@pagedir#1{\pagedirection#1\relax}
+  \def\bbl@dirparastext{\pardirection\the\textdirection\relax}%   %%%%
   % Sadly, we have to deal with boxes in math with basic.
   % Activated every math with the package option bidi=:
   \def\bbl@mathboxdir{%
-    \ifcase\bbl@thetextdir\relax
-      \everyhbox{\textdir TLT\relax}%
-    \else
-      \everyhbox{\textdir TRT\relax}%
-    \fi}
+    \everyhbox\expandafter{\expandafter\textdirection\the\textdirection\relax}%
+  }
 \else % pdftex=0, xetex=2
   \AddBabelHook{babel-bidi}{afterextras}{\bbl@switchdir}
   \DisableBabelHook{babel-bidi}
@@ -11516,7 +11501,7 @@ help from Bernd Raichle, for which I am grateful.
        \expandafter\bbl@mathboxdir\the\frozen@everymath}%
      \frozen@everydisplay\expandafter{%
        \expandafter\bbl@mathboxdir\the\frozen@everydisplay}%
-     \bbl@exp{\output{\bodydir\pagedir\the\output}}%
+     \bbl@exp{\output{\bodydirection\pagedirection\the\output}}%
      \AtEndOfPackage{\EnableBabelHook{babel-bidi}}}
 \else
   \DeclareOption{bidi=basic-r}%
@@ -11554,7 +11539,7 @@ help from Bernd Raichle, for which I am grateful.
   {\let\bbl@beforeforeign\leavevmode
    \ifodd\bbl@engine
      \newattribute\bbl@attr@dir
-     \bbl@exp{\output{\bodydir\pagedir\the\output}}%
+     \bbl@exp{\output{\bodydirection\pagedirection\the\output}}%
    \fi
    \AtEndOfPackage{%
      \EnableBabelHook{babel-bidi}%
@@ -13198,26 +13183,26 @@ end
 \ifx\bbl@beforeforeign\leavevmode % A poor test for bidi=
   \def\bbl@nextfake#1{%  non-local changes, use always inside a group!
     \bbl@exp{%
-      \mathdir\the\bodydir  
+      \mathdirection\the\bodydirection
       #1%              Once entered in math, set boxes to restore values
       \<ifmmode>%
         \everyvbox{%
           \the\everyvbox
-          \bodydir\the\bodydir
-          \mathdir\the\mathdir
+          \bodydirection\the\bodydirection
+          \mathdirection\the\mathdirection
           \everyhbox{\the\everyhbox}%
           \everyvbox{\the\everyvbox}}%
         \everyhbox{%
           \the\everyhbox
-          \bodydir\the\bodydir
-          \mathdir\the\mathdir
+          \bodydirection\the\bodydirection
+          \mathdirection\the\mathdirection
           \everyhbox{\the\everyhbox}%
           \everyvbox{\the\everyvbox}}%
       \<fi>}}%
   \def\@hangfrom#1{%
     \setbox\@tempboxa\hbox{{#1}}%
     \hangindent\wd\@tempboxa
-    \ifnum\bbl@getluadir{page}=\bbl@getluadir{par}\else
+    \ifnum\pagedirection=\pardirection\else
       \shapemode\@ne
     \fi
     \noindent\box\@tempboxa}
@@ -13238,7 +13223,7 @@ end
    \let\bbl@NL@list\list
    \def\bbl@listparshape#1#2#3{%
      \parshape #1 #2 #3 %
-     \ifnum\bbl@getluadir{page}=\bbl@getluadir{par}\else
+     \ifnum\pagedirection=\pardirection\else
        \shapemode\tw@
      \fi}}
   {}
@@ -13248,8 +13233,8 @@ end
      \ifcase\bbl@thetextdir
        \let\bbl@pictresetdir\relax
      \else
-       \textdir TLT\relax
-       \def\bbl@pictresetdir{\textdir TRT\relax}%
+       \tetextdirection 0
+       \def\bbl@pictresetdir{\textdirection 1\relax}%
      \fi}%
    \let\bbl@OL@@picture\@picture
    \let\bbl@OL@put\put
@@ -13276,7 +13261,7 @@ end
 %    \begin{macrocode}
 \IfBabelLayout{counters}%
   {\let\bbl@OL@@textsuperscript\@textsuperscript
-   \bbl@sreplace\@textsuperscript{\m@th}{\m@th\mathdir\pagedir}%
+   \bbl@sreplace\@textsuperscript{\m@th}{\m@th\mathdirection\pagedirection}%
    \let\bbl@latinarabic=\@arabic
    \let\bbl@OL@@arabic\@arabic
    \def\@arabic#1{\babelsublr{\bbl@latinarabic#1}}%
