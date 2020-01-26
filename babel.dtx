@@ -12241,14 +12241,6 @@ help from Bernd Raichle, for which I am grateful.
   \bbl@get@enc#1::\@@@
   \setbox\z@\hbox\bgroup
     \begingroup
-      \ifx\catcodetable\@undefined
-        \let\savecatcodetable\luatexsavecatcodetable
-        \let\initcatcodetable\luatexinitcatcodetable
-        \let\catcodetable\luatexcatcodetable
-      \fi
-      \savecatcodetable\babelcatcodetablenum\relax
-      \initcatcodetable\numexpr\babelcatcodetablenum+1\relax
-      \catcodetable\numexpr\babelcatcodetablenum+1\relax
       \catcode`\#=6  \catcode`\$=3 \catcode`\&=4 \catcode`\^=7
       \catcode`\_=8  \catcode`\{=1 \catcode`\}=2 \catcode`\~=13
       \catcode`\@=11 \catcode`\^^I=10 \catcode`\^^J=12
@@ -12256,7 +12248,6 @@ help from Bernd Raichle, for which I am grateful.
       \catcode`\-=12 \catcode`\/=12 \catcode`\[=12 \catcode`\]=12
       \catcode`\`=12 \catcode`\'=12 \catcode`\"=12
       \input #1\relax
-      \catcodetable\babelcatcodetablenum\relax
     \endgroup
     \def\bbl@tempa{#2}%
     \ifx\bbl@tempa\@empty\else
